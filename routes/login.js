@@ -1,11 +1,11 @@
 const express = require('express');
-const AdminModel = require('../models/adminModel');
+const adminModel = require('../models/adminModel');
 const router = express.Router();
 
 router.post('/admin', async (req, res) => {
   try {
     const { id, password } = req.body;
-    const admin = await AdminModel.findOne({ id: id });
+    const admin = await adminModel.findOne({ id: id });
 
     if (!admin?.id) {
       // user not found
