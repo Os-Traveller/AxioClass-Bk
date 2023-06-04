@@ -11,7 +11,7 @@ app.use(cors());
 const port = process.env.PORT || 5000;
 
 // importing routes
-const createStudent = require('./routes/createStudent');
+const addStudent = require('./routes/addStudent');
 const login = require('./routes/login');
 
 // listening to port
@@ -21,7 +21,7 @@ app.listen(port, () => console.log('Connected'));
 mongoose.connect(process.env.mongoUrl);
 
 // routes
-app.use('/create-student', createStudent);
+app.use('/add-student', addStudent);
 app.use('/login', login);
 
 app.get('/', async (req, res) => {
