@@ -1,34 +1,56 @@
 const express = require('express');
 const router = express.Router();
 const studentModel = require('../models/studentModel');
+const roundDigit = require('../utils/helper');
+const utilityData = require('../utils/data');
 
 router.post('/', async (req, res) => {
   const {
     fName,
     lName,
-    pName,
     dob,
     birthPlace,
+    sex,
     email,
-    phone,
+    number,
+    pName,
+    pNum,
     address,
     hsc,
     ssc,
+    dept,
+    semester,
+    intake,
+    image,
   } = req.body;
   const studentName = fName + ' ' + lName;
+  const count = await studentModel.count({ dept, intake });
+  const id = `${dept}-${intake}-${roundDigit(count + 1, 3)}`;
+
+  const admissionFees = utilityData.admissionFees[dept];
+  const password = process.env.passwordSecret + number;
 
   try {
     const newStudent = await studentModel.create({
-      studentName,
-      id: 'CSE-2023-01-001',
+      name: studentName,
+      id,
       dob,
       birthPlace,
       guardianName: pName,
       email,
-      phone,
+      phone: number,
       address,
       hsc,
       ssc,
+      image,
+      intake,
+      dept,
+      sex,
+      guardianNumber: pNum,
+      currentSemester: semester,
+      demand: admissionFees,
+      due: admissionFees,
+      password,
     });
 
     await newStudent.save();
