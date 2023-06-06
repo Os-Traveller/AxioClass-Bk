@@ -13,7 +13,7 @@ const port = process.env.PORT || 5000;
 // importing routes
 const addStudent = require('./routes/addStudent');
 const login = require('./routes/login');
-
+const getStudent = require('./routes/getStudent');
 // listening to port
 app.listen(port, () => console.log('Connected'));
 
@@ -23,6 +23,7 @@ mongoose.connect(process.env.mongoUrl);
 // routes
 app.use('/add-student', addStudent);
 app.use('/login', login);
+app.use('/get-student', getStudent);
 
 app.get('/', async (req, res) => {
   res.send('Server Connected');
