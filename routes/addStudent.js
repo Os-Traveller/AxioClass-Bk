@@ -55,7 +55,7 @@ router.post('/', async (req, res) => {
 
     await newStudent.save();
 
-    res.send({ data: newStudent, msg: 'Admitted-Successfully', ok: true });
+    res.send({ id: newStudent.id, msg: 'Admitted-Successfully', ok: true });
   } catch (err) {
     console.log(err);
     res.send({ msg: 'Error Occurred', ok: false });
