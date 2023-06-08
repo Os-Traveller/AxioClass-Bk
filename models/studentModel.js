@@ -1,5 +1,11 @@
 const mongoose = require('mongoose');
 
+const transactionSubSchema = new mongoose.Schema({
+  trxId: { type: String, required: true },
+  amount: { type: Number, required: true },
+  date: { type: Date, default: Date.now() },
+});
+
 const StudentSchema = new mongoose.Schema({
   id: { type: String, unique: true, required: true },
   name: { type: String, required: true },
@@ -24,6 +30,7 @@ const StudentSchema = new mongoose.Schema({
   intake: { type: Number, required: true },
   password: { type: String, required: true },
   admissionDate: { type: Date, immutable: true, default: Date.now() },
+  transactions: [transactionSubSchema],
 });
 
 module.exports = mongoose.model('student', StudentSchema);
