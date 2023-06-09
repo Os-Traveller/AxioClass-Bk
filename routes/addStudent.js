@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const studentModel = require('../models/studentModel');
-const roundDigit = require('../utils/helper');
+const { roundDigit } = require('../utils/helper');
 const utilityData = require('../utils/data');
 
 router.post('/', async (req, res) => {

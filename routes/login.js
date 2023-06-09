@@ -26,7 +26,7 @@ router.post('/admin', async (req, res) => {
     });
   } catch (err) {
     // if any error occurs
-    console.log(err);
+    console.log(err.message);
   }
 });
 
