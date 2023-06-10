@@ -19,7 +19,6 @@ router.post('/', async (req, res) => {
     hsc,
     ssc,
     dept,
-    semester,
     intake,
     image,
   } = req.body;
@@ -47,7 +46,7 @@ router.post('/', async (req, res) => {
       dept,
       sex,
       guardianNumber: pNum,
-      currentSemester: semester,
+      currentSemester: 1,
       demand: admissionFees,
       due: admissionFees,
       password,

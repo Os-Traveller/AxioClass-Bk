@@ -15,6 +15,7 @@ const addStudent = require('./routes/addStudent');
 const login = require('./routes/login');
 const getStudent = require('./routes/getStudent');
 const payment = require('./routes/payment');
+const courses = require('./routes/courses');
 // listening to port
 app.listen(port, () => console.log('Connected'));
 
@@ -26,6 +27,7 @@ app.use('/add-student', addStudent);
 app.use('/login', login);
 app.use('/get-student', getStudent);
 app.use('/payment', payment);
+app.use('/courses', courses);
 
 app.get('/', async (req, res) => {
   res.send('Server Connected');
