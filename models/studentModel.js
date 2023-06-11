@@ -11,7 +11,6 @@ const coursesSubSchema = new mongoose.Schema({
   title: { type: String, required: true },
   credit: { type: String, required: true },
   type: { type: String, required: true },
-  semesterName: { type: String, required: true },
 });
 
 const allCoursesSubSchema = new mongoose.Schema({

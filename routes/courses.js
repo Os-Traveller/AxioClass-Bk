@@ -30,4 +30,36 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+router.post('/registration', async (req, res) => {
+  let { selectedCourses, id } = req.body;
+  selectedCourses = Object.values(selectedCourses);
+
+  try {
+    const student = await studentModel.findOne({ id });
+    let allCourses = student.allCourses;
+    if (allCourses) {
+      // all courses exist in database
+      allCourses.onGoing = selectedCourses;
+    } else {
+      // if all courses does not exist
+      allCourses = { onGoing: selectedCourses };
+    }
+
+    const doc = await studentModel.findOneAndUpdate(
+      { id },
+      { allCourses },
+      { new: true }
+    );
+
+    if (doc) {
+      return res.send({ okay: true, data: doc.allCourses });
+    } else {
+      return res.send({ okay: false, msg: 'Can not add courses' });
+    }
+  } catch (err) {
+    console.log(err);
+    res.send({ okay: false, msg: 'Something went wrong' });
+  }
+});
+
 module.exports = router;
