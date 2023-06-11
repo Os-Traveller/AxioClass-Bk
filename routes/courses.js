@@ -51,15 +51,27 @@ router.post('/registration', async (req, res) => {
       { new: true }
     );
 
-    if (doc) {
-      return res.send({ okay: true, data: doc.allCourses });
-    } else {
+    if (!doc) {
       return res.send({ okay: false, msg: 'Can not add courses' });
     }
+
+    res.send({ okay: true, data: doc.allCourses });
   } catch (err) {
     console.log(err);
     res.send({ okay: false, msg: 'Something went wrong' });
   }
+});
+
+router.get('/current/:id', async (req, res) => {
+  const { id } = req.params;
+  const student = await studentModel.findOne({ id });
+  const onGoing = student.allCourses.onGoing;
+
+  if (!onGoing) {
+    return res.send({ okay: false, msg: 'No Course Found' });
+  }
+
+  res.send({ okay: true, data: onGoing });
 });
 
 module.exports = router;
