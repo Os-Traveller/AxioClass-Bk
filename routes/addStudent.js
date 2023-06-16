@@ -50,12 +50,19 @@ router.post('/', async (req, res) => {
       sex,
       guardianNumber: pNum,
       demand: admissionFees,
-      due: admissionFees,
       password,
     });
 
     // updating total demand for university
     const otherInfo = await otherModel.findOne({});
+    let uniDemand = otherInfo.totalDemand;
+    uniDemand += admissionFees;
+
+    await otherModel.updateOne(
+      {},
+      { $set: { totalDemand: uniDemand } },
+      { upsert: true }
+    );
 
     res.send({ id: newStudent.id, msg: 'Admitted-Successfully', ok: true });
   } catch (err) {

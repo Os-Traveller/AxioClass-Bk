@@ -46,7 +46,6 @@ const studentSchema = new mongoose.Schema({
   graduated: { type: Boolean, default: false },
   demand: { type: Number, required: true },
   paid: { type: Number, default: 0 },
-  due: { type: Number, required: true },
   waiver: { type: Number, default: 1 },
   dept: { type: String, default: 'CSE' },
   completedSemester: { type: Number, required: true, default: 0 },
