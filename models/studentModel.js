@@ -19,6 +19,18 @@ const allCoursesSubSchema = new mongoose.Schema({
   retake: [coursesSubSchema],
 });
 
+const sscSubSchema = new mongoose.Schema({
+  result: { type: String, required: true },
+  board: { type: String, required: true },
+  year: { type: String, required: true },
+});
+
+const hscSubSchema = new mongoose.Schema({
+  result: { type: String, required: true },
+  board: { type: String, required: true },
+  year: { type: String, required: true },
+});
+
 const studentSchema = new mongoose.Schema({
   id: { type: String, unique: true, required: true },
   name: { type: String, required: true },
@@ -29,15 +41,15 @@ const studentSchema = new mongoose.Schema({
   guardianName: { type: String, required: true },
   guardianNumber: { type: String, required: true },
   address: { type: String, required: true },
-  ssc: { type: Number, required: true },
-  hsc: { type: Number, required: true },
+  ssc: sscSubSchema,
+  hsc: hscSubSchema,
   graduated: { type: Boolean, default: false },
   demand: { type: Number, required: true },
   paid: { type: Number, default: 0 },
   due: { type: Number, required: true },
-  waiver: { type: Number, default: 0 },
+  waiver: { type: Number, default: 1 },
   dept: { type: String, default: 'CSE' },
-  currentSemester: { type: Number, required: true },
+  completedSemester: { type: Number, required: true, default: 0 },
   image: String,
   sex: { type: String, required: true, Option: 'male' | 'female' | 'other' },
   intake: { type: Number, required: true },
@@ -45,6 +57,7 @@ const studentSchema = new mongoose.Schema({
   admissionDate: { type: Date, immutable: true, default: Date.now() },
   transactions: [transactionSubSchema],
   allCourses: allCoursesSubSchema,
+  registered: { type: Boolean, default: false },
   cgpa: String,
   sgpa: String,
 });

@@ -58,6 +58,8 @@ router.get('/document/:id', async (req, res) => {
       id: student.id,
       password: student.password,
       image: student.image,
+      phone: student.phone,
+      email: student.email,
     };
     res.send({ okay: true, data: studentInfo });
   } catch (err) {
