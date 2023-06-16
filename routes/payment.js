@@ -6,7 +6,7 @@ const router = express.Router();
 router.get('/student/:id', async (req, res) => {
   const stdId = req.params.id;
 
-  const [studentInfo] = await studentModel.find(
+  const studentInfo = await studentModel.findOne(
     { id: stdId },
     'name dept image id intake demand paid waiver due'
   );
