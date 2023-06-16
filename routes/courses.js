@@ -3,6 +3,7 @@ const router = express.Router();
 const coursesModel = require('../models/coursesModel');
 const studentModel = require('../models/studentModel');
 const otherModel = require('../models/otherModel');
+const { tuitionFees } = require('../utils/data');
 
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
@@ -26,7 +27,7 @@ router.get('/:id', async (req, res) => {
     const courses = await coursesModel.find({
       $and: [
         { dept: studentInfo.dept.toLocaleLowerCase() }, // in course table dept are in lower case
-        { semester: studentInfo.completedSemester },
+        { semester: studentInfo.completedSemester + 1 },
       ],
     });
 
@@ -43,36 +44,59 @@ router.get('/:id', async (req, res) => {
 router.post('/registration', async (req, res) => {
   let { selectedCourses, id } = req.body;
   selectedCourses = Object.values(selectedCourses);
-  const otherInfo = await otherModel.findOne({});
-  const uniDemand = otherInfo.totalDemand;
+  try {
+    const otherInfo = await otherModel.findOne({});
+    const student = await studentModel.findOne({ id });
+    let uniDemand = otherInfo.totalDemand;
+    if (!uniDemand) uniDemand = 0;
+    let studentDemand = student.demand;
+    let totalDemand = 0;
 
-  res.send({ msg: 'Found' });
-  // try {
-  //   const student = await studentModel.findOne({ id });
-  //   let allCourses = student.allCourses;
-  //   if (allCourses) {
-  //     // all courses exist in database
-  //     allCourses.onGoing = selectedCourses;
-  //   } else {
-  //     // if all courses does not exist
-  //     allCourses = { onGoing: selectedCourses };
-  //   }
+    selectedCourses.forEach((element) => {
+      totalDemand += +element.credit * tuitionFees;
+    });
 
-  //   const doc = await studentModel.findOneAndUpdate(
-  //     { id },
-  //     { allCourses },
-  //     { new: true }
-  //   );
+    uniDemand += totalDemand; // updated demand of university
+    studentDemand += totalDemand; // updated demand of student
 
-  //   if (!doc) {
-  //     return res.send({ okay: false, msg: 'Can not add courses' });
-  //   }
+    let allCourses = student.allCourses;
+    if (allCourses) {
+      // all courses exist in database
+      allCourses.onGoing = selectedCourses;
+    } else {
+      // if all courses does not exist
+      allCourses = { onGoing: selectedCourses };
+    }
 
-  //   res.send({ okay: true, data: doc.allCourses });
-  // } catch (err) {
-  //   console.log(err.message);
-  //   res.send({ okay: false, msg: 'Something went wrong' });
-  // }
+    // updating student info
+    const doc = await studentModel.updateOne(
+      { id },
+      {
+        $set: {
+          allCourses: allCourses,
+          demand: studentDemand,
+          registered: true,
+        },
+      },
+      { $upsert: true }
+    );
+
+    if (!doc) {
+      return res.send({ okay: false, msg: 'Can not add courses' });
+    }
+
+    //  updating university db
+    await otherModel.findOneAndUpdate(
+      {},
+      { totalDemand: uniDemand },
+      { $upsert: true }
+    );
+
+    res.send({ okay: true, data: doc });
+  } catch (err) {
+    console.log(err.message);
+    res.send({ okay: false, msg: 'Something went wrong' });
+  }
 });
 
 router.get('/current/:id', async (req, res) => {
