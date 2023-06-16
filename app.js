@@ -14,6 +14,7 @@ const port = process.env.PORT || 5000;
 const addStudent = require('./routes/addStudent');
 const login = require('./routes/login');
 const getStudent = require('./routes/getStudent');
+const addTeacher = require('./routes/addTeacher');
 const payment = require('./routes/payment');
 const courses = require('./routes/courses');
 // listening to port
@@ -24,6 +25,7 @@ mongoose.connect(process.env.mongoUrl);
 
 // routes
 app.use('/add-student', addStudent);
+app.use('/add-teacher', addTeacher);
 app.use('/login', login);
 app.use('/get-student', getStudent);
 app.use('/payment', payment);

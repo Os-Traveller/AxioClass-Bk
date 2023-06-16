@@ -52,8 +52,6 @@ router.post('/', async (req, res) => {
       password,
     });
 
-    await newStudent.save();
-
     res.send({ id: newStudent.id, msg: 'Admitted-Successfully', ok: true });
   } catch (err) {
     console.log(err);
