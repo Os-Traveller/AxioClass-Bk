@@ -19,7 +19,7 @@ const allCoursesSubSchema = new mongoose.Schema({
   retake: [coursesSubSchema],
 });
 
-const StudentSchema = new mongoose.Schema({
+const studentSchema = new mongoose.Schema({
   id: { type: String, unique: true, required: true },
   name: { type: String, required: true },
   phone: { type: String, required: true },
@@ -49,4 +49,4 @@ const StudentSchema = new mongoose.Schema({
   sgpa: String,
 });
 
-module.exports = mongoose.model('student', StudentSchema);
+module.exports = mongoose.model('student', studentSchema);

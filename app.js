@@ -20,7 +20,6 @@ const payment = require('./routes/payment');
 const courses = require('./routes/courses');
 // listening to port
 app.listen(port, () => console.log('Connected'));
-
 // connecting with mongo db
 mongoose.connect(process.env.mongoUrl);
 

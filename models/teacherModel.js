@@ -7,7 +7,7 @@ const educationSubSchema = new mongoose.Schema({
   passingYear: { type: Number, required: true },
 });
 
-const TeacherSchema = new mongoose.Schema({
+const teacherSchema = new mongoose.Schema({
   id: { type: String, unique: true, required: true },
   name: { type: String, required: true },
   phone: { type: String, required: true },
@@ -23,4 +23,4 @@ const TeacherSchema = new mongoose.Schema({
   education: educationSubSchema,
 });
 
-module.exports = mongoose.model('teacher', TeacherSchema);
+module.exports = mongoose.model('teacher', teacherSchema);
