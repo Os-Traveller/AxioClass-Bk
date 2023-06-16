@@ -37,7 +37,7 @@ router.post('/', async (req, res) => {
       email,
       phone,
     });
-    res.send({ okay: true, data: newTeacher });
+    res.send({ okay: true, id: newTeacher.id });
   } catch (err) {
     console.log(err.message);
     return res.send({ okay: false, msg: err.message });

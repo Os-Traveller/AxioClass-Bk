@@ -12,9 +12,10 @@ const port = process.env.PORT || 5000;
 
 // importing routes
 const addStudent = require('./routes/addStudent');
+const addTeacher = require('./routes/addTeacher');
 const login = require('./routes/login');
 const getStudent = require('./routes/getStudent');
-const addTeacher = require('./routes/addTeacher');
+const getTeacher = require('./routes/getTeacher');
 const payment = require('./routes/payment');
 const courses = require('./routes/courses');
 // listening to port
@@ -28,6 +29,7 @@ app.use('/add-student', addStudent);
 app.use('/add-teacher', addTeacher);
 app.use('/login', login);
 app.use('/get-student', getStudent);
+app.use('/get-teacher', getTeacher);
 app.use('/payment', payment);
 app.use('/courses', courses);
 
