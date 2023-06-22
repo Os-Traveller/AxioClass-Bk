@@ -1,74 +1,52 @@
 const express = require('express');
 const router = express.Router();
-const studentModel = require('../models/studentModel');
+const {
+  studentsCollection,
+  othersCollection,
+  departmentsCollection,
+} = require('../db/collections');
 const { roundDigit } = require('../utils/helper');
-const { admissionFees } = require('../utils/data');
-const otherModel = require('../models/otherModel');
 
 router.post('/', async (req, res) => {
-  const {
-    fName,
-    lName,
-    dob,
-    birthPlace,
-    sex,
-    email,
-    number,
-    pName,
-    pNum,
-    address,
-    dept,
-    intake,
-    image,
-    hscResult,
-    hscYear,
-    hscBoard,
-    sscResult,
-    sscBoard,
-    sscYear,
-  } = req.body;
-  const studentName = fName + ' ' + lName;
-  const count = await studentModel.count({ dept, intake });
-  const id = `${dept}-${intake}-${roundDigit(count + 1, 3)}`;
+  const studentInfo = req.body;
+  const { dept, intake, number } = studentInfo;
+  const intakeInfo = await departmentsCollection.findOne({
+    deptName: dept,
+    intake: intake,
+  });
+
+  // ******* generating student id ******* \\
+  const totalAdmittedStudents = intakeInfo.totalAdmitted;
+  const id = `${dept}-${intake}-${roundDigit(totalAdmittedStudents + 1, 3)}`;
+
+  // ******* finding student fees ******* \\
+  const otherInfo = await othersCollection.findOne({});
+  const admissionFees = otherInfo.admissionFees;
+
+  // ******* generating password ******* \\
   const password = process.env.passwordSecret + number;
+  const doc = { id, ...studentInfo, password, demand: admissionFees, paid: 0 };
+  const insertResult = await studentsCollection.insertOne(doc);
+  if (!insertResult.acknowledged)
+    return res.send({ okay: false, msg: 'Could not add student' });
 
-  try {
-    const newStudent = await studentModel.create({
-      name: studentName,
-      id,
-      dob,
-      birthPlace,
-      guardianName: pName,
-      email,
-      phone: number,
-      address,
-      ssc: { result: sscResult, board: sscBoard, year: sscYear },
-      hsc: { result: hscResult, board: hscBoard, year: hscYear },
-      image,
-      intake,
-      dept,
-      sex,
-      guardianNumber: pNum,
-      demand: admissionFees,
-      password,
-    });
+  // ******* if student successfully created ******* \\
 
-    // updating total demand for university
-    const otherInfo = await otherModel.findOne({});
-    let uniDemand = otherInfo.totalDemand;
-    uniDemand += admissionFees;
+  // ******* updating total student count ******* \\
+  await departmentsCollection.updateOne(
+    { deptName: dept, intake: intake },
+    { $set: { totalAdmitted: totalAdmittedStudents + 1 } },
+    { upsert: true }
+  );
 
-    await otherModel.updateOne(
-      {},
-      { $set: { totalDemand: uniDemand } },
-      { upsert: true }
-    );
-
-    res.send({ id: newStudent.id, msg: 'Admitted-Successfully', ok: true });
-  } catch (err) {
-    console.log(err.message);
-    res.send({ msg: 'Error Occurred', ok: false });
-  }
+  // ******* updating total demand of university ******* \\
+  const uniDemand = otherInfo.totalDemand;
+  await othersCollection.updateOne(
+    {},
+    { $set: { totalDemand: uniDemand + admissionFees } },
+    { upsert: true }
+  );
+  res.send({ okay: true, id });
 });
 
 module.exports = router;
