@@ -1,13 +1,17 @@
 const express = require('express');
+const { teachersCollection } = require('../db/collections');
 const router = express.Router();
-const teacherModel = require('../models/teacherModel');
 
 router.get('/document/:id', async (req, res) => {
   const { id } = req.params;
-  const teacher = await teacherModel.findOne({ id });
 
+  // ******* finding teacher in database ******* \\
+  const teacher = await teachersCollection.findOne({ id });
+
+  // ******* teacher not found ******* \\
   if (!teacher) return res.send({ okay: false, msg: 'Teacher Not Found' });
 
+  // ******* teacher found ******* \\
   const teacherInfo = {
     id: teacher.id,
     name: teacher.name,

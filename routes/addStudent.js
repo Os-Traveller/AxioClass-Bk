@@ -25,6 +25,8 @@ router.post('/', async (req, res) => {
 
   // ******* generating password ******* \\
   const password = process.env.passwordSecret + number;
+
+  // ******* creating a new student ******* \\
   const doc = { id, ...studentInfo, password, demand: admissionFees, paid: 0 };
   const insertResult = await studentsCollection.insertOne(doc);
   if (!insertResult.acknowledged)

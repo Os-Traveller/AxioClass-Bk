@@ -2,46 +2,36 @@ const express = require('express');
 const router = express.Router();
 const teacherModel = require('../models/teacherModel');
 const { roundDigit } = require('../utils/helper');
+const { othersCollection, teachersCollection } = require('../db/collections');
 
 router.post('/', async (req, res) => {
-  const {
-    name,
-    dob,
-    birthPlace,
-    address,
-    email,
-    phone,
-    sex,
-    image,
-    education,
-    dept,
-  } = req.body;
+  const teacherInfo = req.body;
+  const { phone, dept } = teacherInfo;
 
-  // generating id
-  const count = await teacherModel.count({ dept });
-  const id = `T-${dept}-${roundDigit(count + 1, 2)}`;
+  // ******* generating teacher's id ******* \\
+  const otherInfo = await othersCollection.findOne({});
+  const teachersCount = otherInfo.teachersCount;
+  const id = `T-${dept}-${roundDigit(teachersCount[dept] + 1, 3)}`;
+
+  // ******* generating password ******* \\
   const password = process.env.passwordSecret + phone;
 
-  try {
-    const newTeacher = await teacherModel.create({
-      id,
-      password,
-      image,
-      name,
-      dob,
-      birthPlace,
-      sex,
-      address,
-      dept,
-      education,
-      email,
-      phone,
-    });
-    res.send({ okay: true, id: newTeacher.id });
-  } catch (err) {
-    console.log(err.message);
-    return res.send({ okay: false, msg: err.message });
-  }
+  // ******* creating a new teacher ******* \\
+  const doc = { id, ...teacherInfo, password };
+  const insertResult = await teachersCollection.insertOne(doc);
+
+  // ******* teacher is not created ******* \\
+  if (!insertResult.acknowledged)
+    return res.send({ okay: false, msg: 'Could not add the teacher' });
+
+  // ******* teacher is created ******* \\
+  teachersCount[dept] = teachersCount[dept] + 1;
+  await othersCollection.updateOne(
+    {},
+    { $set: { teachersCount } },
+    { upsert: true }
+  );
+  res.send({ okay: true });
 });
 
 module.exports = router;
