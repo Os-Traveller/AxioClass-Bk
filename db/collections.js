@@ -7,6 +7,7 @@ const courses = db.collection('courses');
 const teachers = db.collection('teachers');
 const transactions = db.collection('transactions');
 const others = db.collection('others');
+
 module.exports = {
   studentsCollection,
   adminCollection,

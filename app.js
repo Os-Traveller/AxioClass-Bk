@@ -1,6 +1,6 @@
 const express = require('express');
 const dotEnv = require('dotenv');
-const mongoose = require('mongoose');
+// const mongoose = require('mongoose');
 const cors = require('cors');
 
 //  to read env file
@@ -20,8 +20,6 @@ const payment = require('./routes/payment');
 const courses = require('./routes/courses');
 // listening to port
 app.listen(port, () => console.log('Connected'));
-// connecting with mongo db
-mongoose.connect(process.env.mongoUrl);
 
 // routes
 app.use('/add-student', addStudent);
