@@ -3,16 +3,18 @@ const mongoClient = require('./mongoConfig');
 const db = mongoClient.db('axio-class');
 const studentsCollection = db.collection('students');
 const adminCollection = db.collection('admin');
-const courses = db.collection('courses');
-const teachers = db.collection('teachers');
-const transactions = db.collection('transactions');
-const others = db.collection('others');
+const coursesCollection = db.collection('courses');
+const teachersCollection = db.collection('teachers');
+const transactionsCollection = db.collection('transactions');
+const othersCollection = db.collection('others');
+const departmentsCollection = db.collection('departments');
 
 module.exports = {
   studentsCollection,
   adminCollection,
-  courses,
-  teachers,
-  transactions,
-  others,
+  coursesCollection,
+  teachersCollection,
+  transactionsCollection,
+  othersCollection,
+  departmentsCollection,
 };
