@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const studentModel = require('../models/studentModel');
-const otherModel = require('../models/otherModel');
-const { tuitionFees } = require('../utils/data');
+
 const {
   studentsCollection,
   coursesCollection,
@@ -102,7 +100,7 @@ router.post('/registration', async (req, res) => {
 
 router.get('/current/:id', async (req, res) => {
   const { id } = req.params;
-  const student = await studentModel.findOne({ id }); // finding student info
+  const student = await studentsCollection.findOne({ id }); // finding student info
 
   // ******* if student not found  ******* \\
   if (!student)
