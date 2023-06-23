@@ -5,46 +5,37 @@ const { studentsCollection } = require('../db/collections');
 
 router.get('/:id', async (req, res) => {
   const id = req.params.id;
-  res.send({ msg: 'Wait' });
-  // try {
-  //   const student = await studentModel.findOne({ id });
-  //   if (!student) return res.send({ okay: false, msg: 'Student not found' });
 
-  //   const studentInfo = {
-  //     basicInfo: {
-  //       name: student.name,
-  //       dept: student.dept,
-  //       id: student.id,
-  //       intake: student.intake,
-  //       image: student.image,
-  //     },
-  //     financialInfo: {
-  //       demand: student.demand,
-  //       paid: student.paid,
-  //       waiver: student.waiver,
-  //       due: student.due,
-  //     },
-  //     academicInfo: {},
-  //     personalInfo: {
-  //       address: student.address,
-  //       phone: student.phone,
-  //       email: student.email,
-  //     },
-  //     guardianInfo: {
-  //       guardianName: student.guardianName,
-  //       guardianNumber: student.guardianNumber,
-  //     },
-  //     education: {
-  //       hsc: student.hsc,
-  //       ssc: student.ssc,
-  //     },
-  //   };
+  // ******* finding a student based on his\her id ******* \\
+  const student = await studentsCollection.findOne({ id });
 
-  //   res.send({ okay: true, data: studentInfo });
-  // } catch (err) {
-  //   console.log(err);
-  //   res.send({ okay: false, msg: 'Something went wrong' });
-  // }
+  // ******* no student found ******* \\
+  if (!student) return res.send({ okay: false, msg: 'Student not found' });
+
+  const studentInfo = {
+    basicInfo: {
+      name: student.name,
+      dept: student.dept,
+      id: student.id,
+      intake: student.intake,
+      image: student.image,
+    },
+    financialInfo: {
+      demand: student.demand,
+      paid: student.paid,
+      waiver: student.waiver,
+      due: student.due,
+    },
+    personalInfo: {
+      address: student.address,
+      phone: student.phone,
+      email: student.email,
+    },
+    guardianInfo: student.guardianInfo,
+    education: student.education,
+    completedSemester: student.completedSemester,
+  };
+  res.send({ okay: true, data: studentInfo });
 });
 
 router.get('/document/:id', async (req, res) => {
