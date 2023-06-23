@@ -1,7 +1,10 @@
 const express = require('express');
 // const studentModel = require('../models/studentModel');
 // const transactionModel = require('../models/transactionModel');
-const { studentsCollection } = require('../db/collections');
+const {
+  studentsCollection,
+  transactionsCollection,
+} = require('../db/collections');
 
 const router = express.Router();
 
@@ -25,49 +28,56 @@ router.get('/student/:id', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  try {
-    const { id, amount } = req.body;
-    const studentInfo = await studentModel.findOne({ id });
-    let { paid, due } = studentInfo;
-    let transactions = studentInfo.transactions;
+  const { id, amount } = req.body;
 
-    // generating trxId id
-    const timeNow = Date.now();
-    const trxId = 'axio-' + timeNow;
+  // ******* getting student info ******* \\
+  const studentInfo = await studentsCollection.findOne({ id });
 
-    // updating transactions of student
-    transactions = [
-      ...transactions,
-      { amount: amount, date: timeNow, trxId: trxId },
-    ];
+  // ******* no student found ******* \\
+  if (!studentInfo) return res.send({ okay: false, msg: 'Student not found' });
 
-    // updating paid and due
-    paid += amount;
-    due -= amount;
+  // ******* student found ******* \\
+  let { paid, transactions } = studentInfo;
+  const timeNow = new Date();
+  const trxId = 'axio' + timeNow;
 
-    // updating transaction collection for admin
-    const newTransaction = await transactionModel.create({
-      trxId,
-      amount,
-      date: timeNow,
-      name: studentInfo.name,
-      id: studentInfo.id,
-      dept: studentInfo.dept,
-      intake: studentInfo.intake,
+  if (!transactions) transactions = []; // if no transaction found
+  transactions = [...transactions, { amount, date: timeNow, trxId }];
+
+  paid += amount; // student's paid info
+
+  const newTransaction = {
+    trxId,
+    amount,
+    date: timeNow,
+    name: studentInfo.name,
+    id: studentInfo.id,
+    dept: studentInfo.dept,
+    intake: studentInfo.intake,
+  };
+  // ******* storing transaction info to the database ******* \\
+  const newTransactionDoc = await transactionsCollection.insertOne(
+    newTransaction
+  );
+
+  // ******* store unsuccessful ******* \\
+  if (!newTransactionDoc.acknowledged)
+    return res.send({ okay: false, msg: 'Could not add payment' });
+
+  // ******* updating student information ******* \\
+  const studentInfoDoc = await studentsCollection.updateOne(
+    { id },
+    { $set: { paid, transactions } },
+    { upsert: true }
+  );
+
+  if (!studentInfoDoc.acknowledged)
+    return res.send({
+      okay: false,
+      msg: "Could not update in student's database",
     });
 
-    // updating students collection
-    const doc = await studentModel.findOneAndUpdate(
-      { id },
-      { due, paid, transactions },
-      { new: true }
-    );
-
-    res.send({ okay: true, data: newTransaction });
-  } catch (err) {
-    console.log(err.message);
-    res.send({ okay: false, msg: 'Something went wrong' });
-  }
+  res.send({ okay: true, data: newTransaction });
 });
 
 module.exports = router;
