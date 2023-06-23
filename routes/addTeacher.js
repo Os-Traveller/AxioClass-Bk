@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const teacherModel = require('../models/teacherModel');
 const { roundDigit } = require('../utils/helper');
 const { othersCollection, teachersCollection } = require('../db/collections');
 
