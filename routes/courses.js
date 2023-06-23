@@ -4,41 +4,41 @@ const coursesModel = require('../models/coursesModel');
 const studentModel = require('../models/studentModel');
 const otherModel = require('../models/otherModel');
 const { tuitionFees } = require('../utils/data');
+const { studentsCollection, coursesCollection } = require('../db/collections');
 
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
-  try {
-    const studentInfo = await studentModel.findOne({ id });
-    if (!studentInfo)
-      return res.send({
-        okay: false,
-        msg: 'User Corrupted',
-        userCorrupted: true,
-      });
+  // ******* getting student's information ******* \\
+  const studentInfo = await studentsCollection.findOne({ id });
 
-    if (studentInfo.registered) {
-      return res.send({
-        okay: false,
-        msg: 'You are already registered',
-        registered: true,
-      });
-    }
-
-    const courses = await coursesModel.find({
-      $and: [
-        { dept: studentInfo.dept.toLocaleLowerCase() }, // in course table dept are in lower case
-        { semester: studentInfo.completedSemester + 1 },
-      ],
+  // ******* checking if student found or not ******* \\
+  if (!studentInfo)
+    return res.send({
+      okay: false,
+      userCorrupted: true,
+      msg: 'User Corrupted, Logging out',
     });
 
-    if (!courses)
-      return res.send({ okay: false, msg: 'You are not eligible!' });
+  // ******* checking if the student is already registered ******* \\
+  if (studentInfo.registered)
+    return res.send({
+      okay: false,
+      registered: true,
+      msg: 'Already Registered',
+    });
 
-    res.send({ okay: true, data: courses });
-  } catch (err) {
-    console.log(err);
-    res.send({ okay: false, msg: 'Error Occurred!' });
-  }
+  // ******* student is not registered ******* \\
+  const coursesCursor = coursesCollection.find({
+    dept: studentInfo.dept.toLocaleLowerCase(),
+    semester: studentInfo.completedSemester + 1,
+  });
+
+  const courseList = await coursesCursor.toArray();
+
+  // ******* course list not found ******* \\
+  if (!courseList) res.send({ okay: false, msg: 'Course List not found' });
+
+  res.send({ data: courseList });
 });
 
 router.post('/registration', async (req, res) => {
