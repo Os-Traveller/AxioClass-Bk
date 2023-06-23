@@ -1,20 +1,6 @@
-const semester = {
-  summer: '01',
-  fall: '02',
-};
-
-const admissionFees = {
-  CSE: 15000,
-  EEE: 15000,
-};
-
-const tuitionFees = {
-  CSE: 2000,
-  EEE: 2100,
-};
-
+const admissionFees = 15000;
+const tuitionFees = 2000;
 const utilityData = {
-  semester,
   admissionFees,
   tuitionFees,
 };

@@ -1,65 +1,61 @@
 const express = require('express');
 const router = express.Router();
-const studentModel = require('../models/studentModel');
-const roundDigit = require('../utils/helper');
-const utilityData = require('../utils/data');
+const {
+  studentsCollection,
+  othersCollection,
+  departmentsCollection,
+} = require('../db/collections');
+const { roundDigit } = require('../utils/helper');
 
 router.post('/', async (req, res) => {
-  const {
-    fName,
-    lName,
-    dob,
-    birthPlace,
-    sex,
-    email,
-    number,
-    pName,
-    pNum,
-    address,
-    hsc,
-    ssc,
-    dept,
-    semester,
-    intake,
-    image,
-  } = req.body;
-  const studentName = fName + ' ' + lName;
-  const count = await studentModel.count({ dept, intake });
-  const id = `${dept}-${intake}-${roundDigit(count + 1, 3)}`;
+  const studentInfo = req.body;
+  const { dept, intake, number } = studentInfo;
+  const intakeInfo = await departmentsCollection.findOne({
+    deptName: dept,
+    intake: intake,
+  });
 
-  const admissionFees = utilityData.admissionFees[dept];
+  // ******* generating student id ******* \\
+  const totalAdmittedStudents = intakeInfo.totalAdmitted;
+  const id = `${dept}-${intake}-${roundDigit(totalAdmittedStudents + 1, 3)}`;
+
+  // ******* finding student fees ******* \\
+  const otherInfo = await othersCollection.findOne({});
+  const admissionFees = otherInfo.admissionFees;
+
+  // ******* generating password ******* \\
   const password = process.env.passwordSecret + number;
 
-  try {
-    const newStudent = await studentModel.create({
-      name: studentName,
-      id,
-      dob,
-      birthPlace,
-      guardianName: pName,
-      email,
-      phone: number,
-      address,
-      hsc,
-      ssc,
-      image,
-      intake,
-      dept,
-      sex,
-      guardianNumber: pNum,
-      currentSemester: semester,
-      demand: admissionFees,
-      due: admissionFees,
-      password,
-    });
+  // ******* creating a new student ******* \\
+  const doc = {
+    id,
+    ...studentInfo,
+    password,
+    demand: admissionFees,
+    paid: 0,
+    completedSemester: 0,
+  };
+  const insertResult = await studentsCollection.insertOne(doc);
+  if (!insertResult.acknowledged)
+    return res.send({ okay: false, msg: 'Could not add student' });
 
-    await newStudent.save();
+  // ******* if student successfully created ******* \\
 
-    res.send({ data: newStudent, msg: 'Admitted-Successfully', ok: true });
-  } catch (err) {
-    console.log(err);
-    res.send({ msg: 'Error Occurred', ok: false });
-  }
+  // ******* updating total student count ******* \\
+  await departmentsCollection.updateOne(
+    { deptName: dept, intake: intake },
+    { $set: { totalAdmitted: totalAdmittedStudents + 1 } },
+    { upsert: true }
+  );
+
+  // ******* updating total demand of university ******* \\
+  const uniDemand = otherInfo.totalDemand;
+  await othersCollection.updateOne(
+    {},
+    { $set: { totalDemand: uniDemand + admissionFees } },
+    { upsert: true }
+  );
+  res.send({ okay: true, id });
 });
 
 module.exports = router;
