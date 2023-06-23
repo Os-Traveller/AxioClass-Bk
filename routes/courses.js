@@ -1,107 +1,115 @@
 const express = require('express');
 const router = express.Router();
-const coursesModel = require('../models/coursesModel');
-const studentModel = require('../models/studentModel');
-const otherModel = require('../models/otherModel');
-const { tuitionFees } = require('../utils/data');
+
+const {
+  studentsCollection,
+  coursesCollection,
+  othersCollection,
+} = require('../db/collections');
 
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
-  try {
-    const studentInfo = await studentModel.findOne({ id });
-    if (!studentInfo)
-      return res.send({
-        okay: false,
-        msg: 'User Corrupted',
-        userCorrupted: true,
-      });
+  // ******* getting student's information ******* \\
+  const studentInfo = await studentsCollection.findOne({ id });
 
-    if (studentInfo.registered) {
-      return res.send({
-        okay: false,
-        msg: 'You are already registered',
-        registered: true,
-      });
-    }
-
-    const courses = await coursesModel.find({
-      $and: [
-        { dept: studentInfo.dept.toLocaleLowerCase() }, // in course table dept are in lower case
-        { semester: studentInfo.completedSemester + 1 },
-      ],
+  // ******* checking if student found or not ******* \\
+  if (!studentInfo)
+    return res.send({
+      okay: false,
+      userCorrupted: true,
+      msg: 'User Corrupted, Logging out',
     });
 
-    if (!courses)
-      return res.send({ okay: false, msg: 'You are not eligible!' });
+  // ******* checking if the student is already registered ******* \\
+  if (studentInfo.registered)
+    return res.send({
+      okay: false,
+      registered: true,
+      msg: 'Already Registered',
+    });
 
-    res.send({ okay: true, data: courses });
-  } catch (err) {
-    console.log(err);
-    res.send({ okay: false, msg: 'Error Occurred!' });
-  }
+  // ******* student is not registered ******* \\
+  const coursesCursor = coursesCollection.find({
+    dept: studentInfo.dept.toLocaleLowerCase(),
+    semester: studentInfo.completedSemester + 1,
+  });
+
+  const courseList = await coursesCursor.toArray();
+
+  // ******* course list not found ******* \\
+  if (!courseList) res.send({ okay: false, msg: 'Course List not found' });
+
+  res.send({ data: courseList, okay: true });
 });
 
 router.post('/registration', async (req, res) => {
   let { selectedCourses, id } = req.body;
   selectedCourses = Object.values(selectedCourses);
-  try {
-    const otherInfo = await otherModel.findOne({});
-    const student = await studentModel.findOne({ id });
-    let uniDemand = otherInfo.totalDemand;
-    if (!uniDemand) uniDemand = 0;
-    let studentDemand = student.demand;
-    let totalDemand = 0;
 
-    selectedCourses.forEach((element) => {
-      totalDemand += +element.credit * tuitionFees;
+  // ******* getting all collection && other properties ******* \\
+  const studentInfo = await studentsCollection.findOne({ id });
+  const otherInfo = await othersCollection.findOne({});
+  const tuitionFees = otherInfo.tuitionFees;
+  let uniDemand = otherInfo.totalDemand;
+  let studentDemand = studentInfo.demand;
+
+  // ******* student not found ******* \\
+  if (!studentInfo)
+    return res.send({
+      okay: false,
+      msg: 'User Corrupted',
+      userCorrupted: true,
     });
 
-    uniDemand += totalDemand; // updated demand of university
-    studentDemand += totalDemand; // updated demand of student
+  // ******* student found ******* \\
 
-    let allCourses = student.allCourses;
-    if (allCourses) {
-      // all courses exist in database
-      allCourses.onGoing = selectedCourses;
-    } else {
-      // if all courses does not exist
-      allCourses = { onGoing: selectedCourses };
-    }
+  // ******* calculating tuition fees for student and university ******* \\
+  if (!uniDemand) uniDemand = 0;
+  let currentSemesterDemand = 0;
+  selectedCourses.forEach((course) => {
+    currentSemesterDemand += +course.credit * tuitionFees;
+  });
 
-    // updating student info
-    const doc = await studentModel.updateOne(
-      { id },
-      {
-        $set: {
-          allCourses: allCourses,
-          demand: studentDemand,
-          registered: true,
-        },
-      },
-      { $upsert: true }
-    );
+  uniDemand += currentSemesterDemand; // updating university's demand
+  studentDemand += currentSemesterDemand; // updating student's demand
 
-    if (!doc) {
-      return res.send({ okay: false, msg: 'Can not add courses' });
-    }
+  // ******* updating student's course list ******* \\
+  let allCourses = studentInfo.allCourses;
+  if (!allCourses) allCourses = {}; //  all courses does not exist in database
+  allCourses.onGoing = selectedCourses;
 
-    //  updating university db
-    await otherModel.findOneAndUpdate(
-      {},
-      { totalDemand: uniDemand },
-      { $upsert: true }
-    );
+  const updatedDoc = await studentsCollection.updateOne(
+    { id },
+    { $set: { allCourses, demand: studentDemand, registered: true } },
+    { upsert: true }
+  );
 
-    res.send({ okay: true, data: doc });
-  } catch (err) {
-    console.log(err.message);
-    res.send({ okay: false, msg: 'Something went wrong' });
-  }
+  // ******* could not update course list ******* \\
+  if (!updatedDoc.acknowledged)
+    return res.send({ okay: true, msg: 'Can add course now!' });
+
+  // ******* after updating course list now update  ******* \\
+  const otherInfoUpdateDoc = await othersCollection.updateOne(
+    {},
+    { $set: { totalDemand: uniDemand } },
+    { upsert: true }
+  );
+
+  res.send({ okay: true, msg: 'Successfully registered' });
 });
 
 router.get('/current/:id', async (req, res) => {
   const { id } = req.params;
-  const student = await studentModel.findOne({ id });
+  const student = await studentsCollection.findOne({ id }); // finding student info
+
+  // ******* if student not found  ******* \\
+  if (!student)
+    return res.send({
+      okay: false,
+      msg: 'Corrupted User',
+      userCorrupted: true,
+    });
+
   const onGoing = student.allCourses?.onGoing;
 
   if (!onGoing) {
