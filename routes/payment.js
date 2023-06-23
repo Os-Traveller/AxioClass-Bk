@@ -1,19 +1,27 @@
 const express = require('express');
-const studentModel = require('../models/studentModel');
-const transactionModel = require('../models/transactionModel');
+// const studentModel = require('../models/studentModel');
+// const transactionModel = require('../models/transactionModel');
+const { studentsCollection } = require('../db/collections');
+
 const router = express.Router();
 
 router.get('/student/:id', async (req, res) => {
   const stdId = req.params.id;
 
-  const studentInfo = await studentModel.findOne(
-    { id: stdId },
-    'name dept image id intake demand paid waiver due'
-  );
+  const student = await studentsCollection.findOne({ id: stdId });
+  if (!student) return res.send({ okay: false, msg: 'Student not found' });
 
-  if (!studentInfo) return res.send({ okay: false, msg: 'Student not found' });
+  const studentInfo = {
+    name: student.name,
+    dept: student.dept,
+    image: student.image,
+    id: student.id,
+    intake: student.intake,
+    demand: student.demand,
+    paid: student.paid,
+  };
 
-  res.send({ data: studentInfo, okay: true });
+  res.send({ okay: true, data: studentInfo });
 });
 
 router.post('/', async (req, res) => {
