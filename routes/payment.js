@@ -4,6 +4,7 @@ const express = require('express');
 const {
   studentsCollection,
   transactionsCollection,
+  othersCollection,
 } = require('../db/collections');
 
 const router = express.Router();
@@ -39,7 +40,7 @@ router.post('/', async (req, res) => {
   // ******* student found ******* \\
   let { paid, transactions } = studentInfo;
   const timeNow = new Date();
-  const trxId = 'axio' + timeNow;
+  const trxId = 'axio' + timeNow.getTime();
 
   if (!transactions) transactions = []; // if no transaction found
   transactions = [...transactions, { amount, date: timeNow, trxId }];
@@ -68,6 +69,17 @@ router.post('/', async (req, res) => {
   const studentInfoDoc = await studentsCollection.updateOne(
     { id },
     { $set: { paid, transactions } },
+    { upsert: true }
+  );
+
+  // ******* updating university total revenue ******* \\
+  const othersInfo = othersCollection.findOne({});
+  let totalRevenue = othersInfo.totalRevenue;
+  totalRevenue += amount;
+
+  await othersCollection.updateOne(
+    {},
+    { $set: { totalRevenue } },
     { upsert: true }
   );
 
