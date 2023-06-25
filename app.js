@@ -17,6 +17,7 @@ const getStudent = require('./routes/getStudent');
 const getTeacher = require('./routes/getTeacher');
 const payment = require('./routes/payment');
 const courses = require('./routes/courses');
+const modification = require('./routes/modification');
 // listening to port
 app.listen(port, () => console.log('Connected'));
 
@@ -28,6 +29,7 @@ app.use('/get-student', getStudent);
 app.use('/get-teacher', getTeacher);
 app.use('/payment', payment);
 app.use('/courses', courses);
+app.use('/modification', modification);
 
 app.get('/', async (req, res) => {
   res.send('Server Connected');
