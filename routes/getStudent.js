@@ -34,6 +34,7 @@ router.get('/:id', async (req, res) => {
     guardianInfo: student.guardianInfo,
     education: student.education,
     completedSemester: student.completedSemester,
+    registered: student.registered,
   };
   res.send({ okay: true, data: studentInfo });
 });
