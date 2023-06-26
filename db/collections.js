@@ -8,6 +8,7 @@ const teachersCollection = db.collection('teachers');
 const transactionsCollection = db.collection('transactions');
 const othersCollection = db.collection('others');
 const departmentsCollection = db.collection('departments');
+const noticesCollection = db.collection('notices');
 
 module.exports = {
   studentsCollection,
@@ -17,4 +18,5 @@ module.exports = {
   transactionsCollection,
   othersCollection,
   departmentsCollection,
+  noticesCollection,
 };
