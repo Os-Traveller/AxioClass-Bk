@@ -72,9 +72,11 @@ router.post('/', async (req, res) => {
   );
 
   // ******* updating university total revenue ******* \\
-  const othersInfo = othersCollection.findOne({});
+  const othersInfo = await othersCollection.findOne({});
   let totalRevenue = othersInfo.totalRevenue;
   totalRevenue += amount;
+
+  console.log(totalRevenue);
 
   await othersCollection.updateOne(
     {},
