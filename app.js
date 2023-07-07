@@ -18,6 +18,8 @@ const getTeacher = require('./routes/getTeacher');
 const payment = require('./routes/payment');
 const courses = require('./routes/courses');
 const modification = require('./routes/modification');
+const notice = require('./routes/notice');
+
 // listening to port
 app.listen(port, () => console.log('Connected'));
 
@@ -30,6 +32,7 @@ app.use('/get-teacher', getTeacher);
 app.use('/payment', payment);
 app.use('/courses', courses);
 app.use('/modification', modification);
+app.use('/notice', notice);
 
 app.get('/', async (req, res) => {
   res.send('Server Connected');
