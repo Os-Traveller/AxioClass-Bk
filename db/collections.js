@@ -9,6 +9,7 @@ const transactionsCollection = db.collection('transactions');
 const othersCollection = db.collection('others');
 const departmentsCollection = db.collection('departments');
 const noticesCollection = db.collection('notices');
+const activitiesCollection = db.collection('activities');
 
 module.exports = {
   studentsCollection,
@@ -19,4 +20,5 @@ module.exports = {
   othersCollection,
   departmentsCollection,
   noticesCollection,
+  activitiesCollection,
 };

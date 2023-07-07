@@ -1,44 +1,70 @@
 const express = require('express');
-const { noticesCollection } = require('../db/collections');
+const {
+  noticesCollection,
+  activitiesCollection,
+} = require('../db/collections');
+const { getDateObject } = require('../utils/helper');
 const ObjectId = require('mongodb').ObjectId;
 const router = express.Router();
 
 router.post('/add', async (req, res) => {
-  const { title, category, description } = req.body;
-  const date = new Date();
+  try {
+    const { title, category, description } = req.body;
+    const date = new Date();
+    const dateObject = getDateObject(date);
 
-  const newNotice = await noticesCollection.insertOne({
-    title,
-    category,
-    description,
-    date,
-  });
+    const newNotice = await noticesCollection.insertOne({
+      title,
+      category,
+      description,
+      date: dateObject.date,
+    });
 
-  if (!newNotice.acknowledged)
-    return res.send({ okay: false, msg: "Notice Can't be added" });
+    if (!newNotice.acknowledged)
+      return res.send({ okay: false, msg: "Notice Can't be added" });
 
-  res.send({ okay: true, msg: 'Notice added' });
+    await activitiesCollection.insertOne({
+      date: dateObject.date,
+      activity: 'Posted a notice',
+      data: `ID : ${newNotice.insertedId}`,
+      time: dateObject.time,
+    });
+
+    res.send({ okay: true, msg: 'Notice added' });
+  } catch (err) {
+    console.log(err.massage);
+    res.send({ okay: false, msg: err.massage });
+  }
 });
 
 router.get('/', async (req, res) => {
-  const cursor = noticesCollection.find({});
-  const notices = await cursor.toArray();
-  if (!notices) return res.send({ okay: false, msg: 'No notices found' });
+  try {
+    const cursor = noticesCollection.find({});
+    const notices = await cursor.toArray();
+    if (!notices) return res.send({ okay: false, msg: 'No notices found' });
 
-  res.send({ okay: true, data: notices });
+    res.send({ okay: true, data: notices });
+  } catch (err) {
+    console.log(err.massage);
+    res.send(err.massage);
+  }
 });
 
 router.delete('/:id', async (req, res) => {
-  const { id } = req.params;
+  try {
+    const { id } = req.params;
+    const deletedStat = await noticesCollection.deleteOne({
+      _id: ObjectId(id),
+    });
 
-  const deletedStat = await noticesCollection.deleteOne({
-    _id: ObjectId(id),
-  });
+    if (!deletedStat.acknowledged)
+      return res.send({ okay: false, msg: 'Could not delete' });
 
-  if (!deletedStat.acknowledged)
-    return res.send({ okay: false, msg: 'Could not delete' });
-
-  res.send({ okay: true, msg: 'Deleted Successfully' });
+    res.send({ okay: true, msg: 'Deleted Successfully' });
+  } catch (err) {
+    console.log(err.massage);
+    res.send({ okay: false, msg: err.massage });
+  }
 });
 
 module.exports = router;
