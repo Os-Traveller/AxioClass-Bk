@@ -1,8 +1,6 @@
 const express = require('express');
-const {
-  noticesCollection,
-  transactionsCollection,
-} = require('../db/collections');
+const { noticesCollection } = require('../db/collections');
+const ObjectId = require('mongodb').ObjectId;
 const router = express.Router();
 
 router.post('/add', async (req, res) => {
@@ -28,6 +26,19 @@ router.get('/', async (req, res) => {
   if (!notices) return res.send({ okay: false, msg: 'No notices found' });
 
   res.send({ okay: true, data: notices });
+});
+
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+
+  const deletedStat = await noticesCollection.deleteOne({
+    _id: ObjectId(id),
+  });
+
+  if (!deletedStat.acknowledged)
+    return res.send({ okay: false, msg: 'Could not delete' });
+
+  res.send({ okay: true, msg: 'Deleted Successfully' });
 });
 
 module.exports = router;

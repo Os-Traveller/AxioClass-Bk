@@ -1,6 +1,5 @@
 const express = require('express');
-// const studentModel = require('../models/studentModel');
-// const transactionModel = require('../models/transactionModel');
+
 const {
   studentsCollection,
   transactionsCollection,
