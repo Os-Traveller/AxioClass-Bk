@@ -1,17 +1,17 @@
 const express = require('express');
-// const studentModel = require('../models/studentModel');
-// const transactionModel = require('../models/transactionModel');
+
 const {
   studentsCollection,
   transactionsCollection,
   othersCollection,
+  activitiesCollection,
 } = require('../db/collections');
+const { getDateObject } = require('../utils/helper');
 
 const router = express.Router();
 
 router.get('/student/:id', async (req, res) => {
   const stdId = req.params.id;
-
   const student = await studentsCollection.findOne({ id: stdId });
   if (!student) return res.send({ okay: false, msg: 'Student not found' });
 
@@ -30,6 +30,8 @@ router.get('/student/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const { id, amount } = req.body;
+  const date = new Date();
+  const dateObject = getDateObject(date);
 
   // ******* getting student info ******* \\
   const studentInfo = await studentsCollection.findOne({ id });
@@ -39,18 +41,18 @@ router.post('/', async (req, res) => {
 
   // ******* student found ******* \\
   let { paid, transactions } = studentInfo;
-  const timeNow = new Date();
-  const trxId = 'axio' + timeNow.getTime();
+  const trxId = 'axio' + date.getTime();
 
   if (!transactions) transactions = []; // if no transaction found
-  transactions = [...transactions, { amount, date: timeNow, trxId }];
+  transactions = [...transactions, { amount, date: dateObject.date, trxId }];
 
   paid += amount; // student's paid info
 
+  // for transaction collections
   const newTransaction = {
     trxId,
     amount,
-    date: timeNow,
+    date: dateObject.date,
     name: studentInfo.name,
     id: studentInfo.id,
     dept: studentInfo.dept,
@@ -73,9 +75,11 @@ router.post('/', async (req, res) => {
   );
 
   // ******* updating university total revenue ******* \\
-  const othersInfo = othersCollection.findOne({});
+  const othersInfo = await othersCollection.findOne({});
   let totalRevenue = othersInfo.totalRevenue;
   totalRevenue += amount;
+
+  console.log(totalRevenue);
 
   await othersCollection.updateOne(
     {},
@@ -88,6 +92,13 @@ router.post('/', async (req, res) => {
       okay: false,
       msg: "Could not update in student's database",
     });
+
+  await activitiesCollection.insertOne({
+    date: dateObject.date,
+    activity: `${studentInfo.name} paid ${amount}`,
+    data: `ID : ${trxId}`,
+    time: dateObject.time,
+  });
 
   res.send({ okay: true, data: newTransaction });
 });
