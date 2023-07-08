@@ -4,7 +4,7 @@ const {
   activitiesCollection,
 } = require('../db/collections');
 const { getDateObject } = require('../utils/helper');
-const ObjectId = require('mongodb').ObjectId;
+const { ObjectId } = require('mongodb');
 const router = express.Router();
 
 router.post('/add', async (req, res) => {
@@ -54,7 +54,7 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const deletedStat = await noticesCollection.deleteOne({
-      _id: ObjectId(id),
+      _id: new ObjectId(id),
     });
 
     if (!deletedStat.acknowledged)
