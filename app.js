@@ -21,6 +21,7 @@ const modification = require('./routes/modification');
 const notice = require('./routes/notice');
 const transaction = require('./routes/transaction');
 const activities = require('./routes/activities');
+const classroom = require('./routes/classroom');
 
 // listening to port
 app.listen(port, () => console.log('Connected'));
@@ -37,8 +38,8 @@ app.use('/modification', modification);
 app.use('/notice', notice);
 app.use('/transaction', transaction);
 app.use('/activities', activities);
+app.use('/classroom', classroom);
 
 app.get('/', async (req, res) => {
-  const event = new Date();
-  res.send('Current Time : ' + event.toLocaleTimeString('en-US'));
+  res.send('server running');
 });

@@ -1,0 +1,38 @@
+[
+  {
+    "_id": { "$oid": "6484e0c01dc20a6370d17237" },
+    "title": "Electronic Devices and Circuits",
+    "code": "EEE 211",
+    "credit": { "$numberInt": "3" },
+    "type": "Theory",
+    "semester": { "$numberInt": "3" },
+    "dept": "cse"
+  },
+  {
+    "_id": { "$oid": "6484e0c01dc20a6370d17228" },
+    "title": "Differential and Integral Calculus",
+    "code": "MAT 101",
+    "credit": { "$numberInt": "3" },
+    "type": "Theory",
+    "semester": { "$numberInt": "1" },
+    "dept": "cse"
+  },
+  {
+    "_id": { "$oid": "6484e0c01dc20a6370d1723c" },
+    "title": "Data Structures Lab",
+    "code": "CSE 232",
+    "credit": { "$numberDouble": "1.5" },
+    "type": "Lab",
+    "semester": { "$numberInt": "4" },
+    "dept": "cse"
+  },
+  {
+    "_id": { "$oid": "6484e0c01dc20a6370d17248" },
+    "title": "Accounting Fundamentals",
+    "code": "ACT 201",
+    "credit": { "$numberInt": "2" },
+    "type": "Theory",
+    "semester": { "$numberInt": "6" },
+    "dept": "cse"
+  }
+]
