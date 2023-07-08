@@ -77,7 +77,14 @@ router.get('/creation-info/:dept/:intake', async (req, res) => {
 
     let subjectList = await subjectsCursor.toArray();
     if (!subjectList) subjectList = [];
-    res.send({ okay: true, data: { subjectList, teacherList } });
+
+    // getting only course code
+    const courseCodeList = subjectList.map((course) => course.code);
+    const teacherInfoList = teacherList.map((teacher) => {
+      return { name: teacher.name, id: teacher.id };
+    });
+
+    res.send({ okay: true, data: { courseCodeList, teacherInfoList } });
   } catch (err) {
     console.log(err);
     res.send({ okay: false, msg: err });
