@@ -91,4 +91,17 @@ router.get('/creation-info/:dept/:intake', async (req, res) => {
   }
 });
 
+router.get('/get-admin', async (req, res) => {
+  try {
+    const classRoomCursor = classRoomCollection.find({});
+    let classRooms = await classRoomCursor.toArray();
+    if (!classRooms) classRooms = [];
+
+    res.send({ okay: true, data: classRooms });
+  } catch (err) {
+    console.log(err);
+    res.send({ okay: false, msg: err.massage });
+  }
+});
+
 module.exports = router;
