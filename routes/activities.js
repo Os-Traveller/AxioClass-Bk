@@ -7,7 +7,7 @@ router.get('/', async (req, res) => {
     const cursor = activitiesCollection.find();
     const activities = await cursor.toArray();
     if (!activities) res.send({ okay: false, msg: 'No Activity Found' });
-    return res.send({ okay: true, data: activities });
+    return res.send({ okay: true, data: activities.reverse() });
   } catch (err) {
     console.log(err);
     return res.send({ okay: false, msg: err.massage });
