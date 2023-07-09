@@ -7,7 +7,7 @@ const {
 const router = express.Router();
 
 // getting latest transaction
-router.get('/get-/:count', async (req, res) => {
+router.get('/history/:count', async (req, res) => {
   const count = req.params.count;
   const cursor = transactionsCollection.find({});
   let transactions = await cursor.toArray();
