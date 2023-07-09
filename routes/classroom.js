@@ -104,4 +104,36 @@ router.get('/get-admin', async (req, res) => {
   }
 });
 
+router.get('/search', async (req, res) => {
+  const type = req.query.type;
+  let query;
+  switch (type) {
+    case 'code': {
+      const classCode = req.query.classCode;
+      query = { classCode };
+      break;
+    }
+    case 'teacher': {
+      const teacherId = req.query.teacherId;
+      query = { teacherId };
+      break;
+    }
+    case 'intake-dept': {
+      const intake = req.query.intake;
+      const dept = req.query.dept;
+      query = { dept, intake };
+      break;
+    }
+    default: {
+      return res.send({ okay: false, msg: 'Invalid option' });
+    }
+  }
+  const cursor = classRoomCollection.find(query);
+  const classList = await cursor.toArray();
+
+  if (!classList || classList.length === 0)
+    return res.send({ okay: false, msg: 'No class found' });
+  res.send({ okay: true, data: classList });
+});
+
 module.exports = router;
