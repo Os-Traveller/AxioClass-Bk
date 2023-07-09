@@ -41,7 +41,7 @@ router.post('/', async (req, res) => {
 
   // ******* student found ******* \\
   let { paid, transactions } = studentInfo;
-  const trxId = 'axio' + date.getTime();
+  const trxId = 'axio-' + date.getTime();
 
   if (!transactions) transactions = []; // if no transaction found
   transactions = [...transactions, { amount, date: dateObject.date, trxId }];
@@ -95,7 +95,7 @@ router.post('/', async (req, res) => {
 
   await activitiesCollection.insertOne({
     date: dateObject.date,
-    activity: `${studentInfo.name} paid ${amount}`,
+    activity: `Payment ${amount}/=`,
     data: `ID : ${trxId}`,
     time: dateObject.time,
   });

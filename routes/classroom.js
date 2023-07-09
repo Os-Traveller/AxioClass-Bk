@@ -77,11 +77,63 @@ router.get('/creation-info/:dept/:intake', async (req, res) => {
 
     let subjectList = await subjectsCursor.toArray();
     if (!subjectList) subjectList = [];
-    res.send({ okay: true, data: { subjectList, teacherList } });
+
+    // getting only course code
+    const courseCodeList = subjectList.map((course) => course.code);
+    const teacherInfoList = teacherList.map((teacher) => {
+      return { name: teacher.name, id: teacher.id };
+    });
+
+    res.send({ okay: true, data: { courseCodeList, teacherInfoList } });
   } catch (err) {
     console.log(err);
     res.send({ okay: false, msg: err });
   }
+});
+
+router.get('/get-admin', async (req, res) => {
+  try {
+    const classRoomCursor = classRoomCollection.find({});
+    let classRooms = await classRoomCursor.toArray();
+    if (!classRooms) classRooms = [];
+
+    res.send({ okay: true, data: classRooms });
+  } catch (err) {
+    console.log(err);
+    res.send({ okay: false, msg: err.massage });
+  }
+});
+
+router.get('/search', async (req, res) => {
+  const type = req.query.type;
+  let query;
+  switch (type) {
+    case 'code': {
+      const classCode = req.query.classCode;
+      query = { classCode };
+      break;
+    }
+    case 'teacher': {
+      const teacherId = req.query.teacherId;
+      query = { teacherId };
+      break;
+    }
+    case 'intake-dept': {
+      const intake = req.query.intake;
+      const dept = req.query.dept;
+      query = { dept, intake };
+      break;
+    }
+    default: {
+      return res.send({ okay: false, msg: 'Invalid option' });
+    }
+  }
+  const cursor = classRoomCollection.find(query);
+  const classList = await cursor.toArray();
+
+  if (!classList || classList.length === 0)
+    return res.send({ okay: false, msg: 'No class found' });
+  res.send({ okay: true, data: classList });
 });
 
 module.exports = router;
