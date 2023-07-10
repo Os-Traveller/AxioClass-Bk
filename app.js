@@ -22,6 +22,7 @@ const notice = require('./routes/notice');
 const transaction = require('./routes/transaction');
 const activities = require('./routes/activities');
 const classroom = require('./routes/classroom');
+const dashboard = require('./routes/dashboard');
 
 // listening to port
 app.listen(port, () => console.log('Connected'));
@@ -39,6 +40,7 @@ app.use('/notice', notice);
 app.use('/transaction', transaction);
 app.use('/activities', activities);
 app.use('/classroom', classroom);
+app.use('/dashboard', dashboard);
 
 app.get('/', async (req, res) => {
   res.send('server running');
