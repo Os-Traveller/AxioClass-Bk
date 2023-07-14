@@ -8,99 +8,112 @@ const {
 } = require('../db/collections');
 
 router.get('/:id', async (req, res) => {
-  const { id } = req.params;
-  // ******* getting student's information ******* \\
-  const studentInfo = await studentsCollection.findOne({ id });
+  try {
+    const { id } = req.params;
+    // ******* getting student's information ******* \\
+    const studentInfo = await studentsCollection.findOne({ id });
 
-  // ******* checking if student found or not ******* \\
-  if (!studentInfo)
-    return res.send({
-      okay: false,
-      userCorrupted: true,
-      msg: 'User Corrupted, Logging out',
+    // ******* checking if student found or not ******* \\
+    if (!studentInfo)
+      return res.send({
+        okay: false,
+        userCorrupted: true,
+        msg: 'User Corrupted, Logging out',
+      });
+
+    // ******* checking if the student is already registered ******* \\
+    if (studentInfo.registered)
+      return res.send({
+        okay: false,
+        registered: true,
+        msg: 'Already Registered',
+      });
+
+    // ******* student is not registered ******* \\
+    const coursesCursor = coursesCollection.find({
+      dept: studentInfo.dept.toLocaleLowerCase(),
+      semester: studentInfo.completedSemester + 1,
     });
 
-  // ******* checking if the student is already registered ******* \\
-  if (studentInfo.registered)
-    return res.send({
-      okay: false,
-      registered: true,
-      msg: 'Already Registered',
-    });
+    const courseList = await coursesCursor.toArray();
 
-  // ******* student is not registered ******* \\
-  const coursesCursor = coursesCollection.find({
-    dept: studentInfo.dept.toLocaleLowerCase(),
-    semester: studentInfo.completedSemester + 1,
-  });
+    // ******* course list not found ******* \\
+    if (!courseList) res.send({ okay: false, msg: 'Course List not found' });
 
-  const courseList = await coursesCursor.toArray();
-
-  // ******* course list not found ******* \\
-  if (!courseList) res.send({ okay: false, msg: 'Course List not found' });
-
-  res.send({ data: courseList, okay: true });
+    res.send({ data: courseList, okay: true });
+  } catch (err) {
+    console.log(err);
+    res.send({ okay: false, msg: 'Error Occurred' });
+  }
 });
 
 router.post('/registration', async (req, res) => {
-  let { selectedCourses, id } = req.body;
-  selectedCourses = Object.values(selectedCourses);
+  try {
+    let { selectedCourses, id } = req.body;
+    selectedCourses = Object.values(selectedCourses);
 
-  // ******* getting all collection && other properties ******* \\
-  const studentInfo = await studentsCollection.findOne({ id });
-  const otherInfo = await othersCollection.findOne({});
-  const tuitionFees = otherInfo.tuitionFees;
-  let uniDemand = otherInfo.totalDemand;
-  let studentDemand = studentInfo.demand;
+    // ******* getting all collection && other properties ******* \\
+    const studentInfo = await studentsCollection.findOne({ id });
+    const otherInfo = await othersCollection.findOne({});
+    const currentSemester = otherInfo.currentSemester;
+    const tuitionFees = otherInfo.tuitionFees;
+    let uniDemand = otherInfo.totalDemand;
+    let studentDemand = studentInfo.demand;
 
-  // ******* student not found ******* \\
-  if (!studentInfo)
-    return res.send({
-      okay: false,
-      msg: 'User Corrupted',
-      userCorrupted: true,
+    // ******* student not found ******* \\
+    if (!studentInfo)
+      return res.send({
+        okay: false,
+        msg: 'User Corrupted',
+        userCorrupted: true,
+      });
+
+    // ******* student found ******* \\
+
+    // ******* calculating tuition fees for student and university ******* \\
+    if (!uniDemand) uniDemand = 0;
+    let currentSemesterDemand = 0;
+    selectedCourses.forEach((course) => {
+      currentSemesterDemand += +course.credit * tuitionFees;
     });
 
-  // ******* student found ******* \\
+    uniDemand += currentSemesterDemand; // updating university's demand
+    studentDemand += currentSemesterDemand; // updating student's demand
 
-  // ******* calculating tuition fees for student and university ******* \\
-  if (!uniDemand) uniDemand = 0;
-  let currentSemesterDemand = 0;
-  selectedCourses.forEach((course) => {
-    currentSemesterDemand += +course.credit * tuitionFees;
-  });
+    // ******* updating student's course list ******* \\
+    let courses = studentInfo.courses;
+    if (!courses) courses = {}; //  all courses does not exist in database
+    courses[currentSemester] = selectedCourses;
 
-  uniDemand += currentSemesterDemand; // updating university's demand
-  studentDemand += currentSemesterDemand; // updating student's demand
+    const updatedDoc = await studentsCollection.updateOne(
+      { id },
+      { $set: { courses, demand: studentDemand, registered: true } },
+      { upsert: true }
+    );
 
-  // ******* updating student's course list ******* \\
-  let allCourses = studentInfo.allCourses;
-  if (!allCourses) allCourses = {}; //  all courses does not exist in database
-  allCourses.onGoing = selectedCourses;
+    // ******* could not update course list ******* \\
+    if (!updatedDoc.acknowledged)
+      return res.send({ okay: true, msg: 'Can add course now!' });
 
-  const updatedDoc = await studentsCollection.updateOne(
-    { id },
-    { $set: { allCourses, demand: studentDemand, registered: true } },
-    { upsert: true }
-  );
+    // ******* after updating course list now update  ******* \\
+    const otherInfoUpdateDoc = await othersCollection.updateOne(
+      {},
+      { $set: { totalDemand: uniDemand } },
+      { upsert: true }
+    );
 
-  // ******* could not update course list ******* \\
-  if (!updatedDoc.acknowledged)
-    return res.send({ okay: true, msg: 'Can add course now!' });
-
-  // ******* after updating course list now update  ******* \\
-  const otherInfoUpdateDoc = await othersCollection.updateOne(
-    {},
-    { $set: { totalDemand: uniDemand } },
-    { upsert: true }
-  );
-
-  res.send({ okay: true, msg: 'Successfully registered' });
+    res.send({ okay: true, msg: 'Successfully registered' });
+  } catch (err) {
+    console.log(err);
+    res.send({ okay: false, msg: 'Error Occurred' });
+  }
 });
 
 router.get('/current/:id', async (req, res) => {
   const { id } = req.params;
   const student = await studentsCollection.findOne({ id }); // finding student info
+  const otherInfo = await othersCollection.findOne({});
+  const currentSemester = otherInfo.currentSemester;
 
   // ******* if student not found  ******* \\
   if (!student)
@@ -110,7 +123,7 @@ router.get('/current/:id', async (req, res) => {
       userCorrupted: true,
     });
 
-  const onGoing = student.allCourses?.onGoing;
+  const onGoing = student.courses[currentSemester];
 
   if (!onGoing) {
     return res.send({ okay: false, msg: 'No Course Found' });
