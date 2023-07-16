@@ -141,7 +141,13 @@ router.get('/search', async (req, res) => {
 router.post('add-post', async (req, res) => {
   try {
     const postInformation = req.body;
-    const postInsertStatus = await postCollection.insertOne(postInformation);
+    const date = new Date();
+    const dateObject = getDateObject(date);
+    const postInsertStatus = await postCollection.insertOne({
+      ...postInformation,
+      date: dateObject.date,
+      time: dateObject.time,
+    });
     if (!postInsertStatus)
       return res.send({ okay: false, msg: 'Could not post' });
 
