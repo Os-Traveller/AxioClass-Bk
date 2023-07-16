@@ -31,7 +31,8 @@ router.post('/add', async (req, res) => {
     };
   });
   // got all students who are in that dept and intake
-  const classCode = courseCode + '-' + intake;
+  let classCode = courseCode.split(' ').join('-');
+  classCode = classCode + '-' + intake;
   // now creating the classroom
   const classCreateStatus = await classRoomCollection.insertOne({
     ...classData,
