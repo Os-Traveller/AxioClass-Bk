@@ -152,13 +152,14 @@ router.post('add-post', async (req, res) => {
   }
 });
 
-router.get('get-post/:classCode', async (req, res) => {
+router.get('/:classCode', async (req, res) => {
   try {
     const classCode = req.params.classCode;
     const postCursor = postCollection.find({ classCode });
     const posts = await postCursor.toArray();
     if (!posts) return res.send({ okay: false, msg: 'Nothing found' });
-    res.send({ okay: true, data: posts });
+    const classInfo = await classRoomCollection.findOne({ classCode });
+    res.send({ okay: true, data: { posts, classInfo } });
   } catch (err) {
     console.log(err);
     res.send({ okay: false, msg: 'Something went wrong' });
