@@ -24,4 +24,17 @@ router.get('/document/:id', async (req, res) => {
   res.send({ okay: true, data: teacherInfo });
 });
 
+router.get('/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const teacherInfo = await teachersCollection.findOne({ id });
+    if (!teacherInfo)
+      return res.send({ okay: false, msg: 'Teacher not found' });
+    res.send({ okay: true, data: teacherInfo });
+  } catch (err) {
+    console.log(err);
+    res.send({ okay: false, msg: 'Something went wrong' });
+  }
+});
+
 module.exports = router;

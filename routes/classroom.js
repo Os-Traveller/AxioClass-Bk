@@ -6,6 +6,7 @@ const {
   teachersCollection,
   coursesCollection,
   departmentsCollection,
+  postCollection,
 } = require('../db/collections');
 const { getDateObject } = require('../utils/helper');
 const router = express.Router();
@@ -30,7 +31,8 @@ router.post('/add', async (req, res) => {
     };
   });
   // got all students who are in that dept and intake
-  const classCode = courseCode + '-' + intake;
+  let classCode = courseCode.split(' ').join('-');
+  classCode = classCode + '-' + intake;
   // now creating the classroom
   const classCreateStatus = await classRoomCollection.insertOne({
     ...classData,
@@ -134,6 +136,33 @@ router.get('/search', async (req, res) => {
   if (!classList || classList.length === 0)
     return res.send({ okay: false, msg: 'No class found' });
   res.send({ okay: true, data: classList });
+});
+
+router.post('add-post', async (req, res) => {
+  try {
+    const postInformation = req.body;
+    const postInsertStatus = await postCollection.insertOne(postInformation);
+    if (!postInsertStatus)
+      return res.send({ okay: false, msg: 'Could not post' });
+
+    res.send({ okay: true, msg: 'Successfully posted' });
+  } catch (err) {
+    console.log(err);
+    res.send({ okay: false, msg: 'Something went wrong' });
+  }
+});
+
+router.get('get-post/:classCode', async (req, res) => {
+  try {
+    const classCode = req.params.classCode;
+    const postCursor = postCollection.find({ classCode });
+    const posts = await postCursor.toArray();
+    if (!posts) return res.send({ okay: false, msg: 'Nothing found' });
+    res.send({ okay: true, data: posts });
+  } catch (err) {
+    console.log(err);
+    res.send({ okay: false, msg: 'Something went wrong' });
+  }
 });
 
 module.exports = router;

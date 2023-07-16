@@ -11,6 +11,7 @@ const departmentsCollection = db.collection('departments');
 const noticesCollection = db.collection('notices');
 const activitiesCollection = db.collection('activities');
 const classRoomCollection = db.collection('classrooms');
+const postCollection = db.collection('posts');
 
 module.exports = {
   studentsCollection,
@@ -23,4 +24,5 @@ module.exports = {
   noticesCollection,
   activitiesCollection,
   classRoomCollection,
+  postCollection,
 };
