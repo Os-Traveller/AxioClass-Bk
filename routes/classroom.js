@@ -138,7 +138,7 @@ router.get('/search', async (req, res) => {
   res.send({ okay: true, data: classList });
 });
 
-router.post('add-post', async (req, res) => {
+router.post('/add-post', async (req, res) => {
   try {
     const postInformation = req.body;
     const date = new Date();
