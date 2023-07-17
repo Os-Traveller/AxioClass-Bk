@@ -138,10 +138,16 @@ router.get('/search', async (req, res) => {
   res.send({ okay: true, data: classList });
 });
 
-router.post('add-post', async (req, res) => {
+router.post('/add-post', async (req, res) => {
   try {
     const postInformation = req.body;
-    const postInsertStatus = await postCollection.insertOne(postInformation);
+    const date = new Date();
+    const dateObject = getDateObject(date);
+    const postInsertStatus = await postCollection.insertOne({
+      ...postInformation,
+      date: dateObject.date,
+      time: dateObject.time,
+    });
     if (!postInsertStatus)
       return res.send({ okay: false, msg: 'Could not post' });
 
@@ -152,17 +158,34 @@ router.post('add-post', async (req, res) => {
   }
 });
 
-router.get('get-post/:classCode', async (req, res) => {
+router.get('/:classCode', async (req, res) => {
   try {
     const classCode = req.params.classCode;
     const postCursor = postCollection.find({ classCode });
     const posts = await postCursor.toArray();
     if (!posts) return res.send({ okay: false, msg: 'Nothing found' });
-    res.send({ okay: true, data: posts });
+    const classInfo = await classRoomCollection.findOne({ classCode });
+    res.send({ okay: true, data: { posts, classInfo } });
   } catch (err) {
     console.log(err);
     res.send({ okay: false, msg: 'Something went wrong' });
   }
+});
+
+router.get('/student/:id', async (req, res) => {
+  const id = req.params.id;
+  const studentInfo = await studentsCollection.findOne({ id });
+  if (!studentInfo) return res.send({ okay: false, msg: 'No student Found' });
+
+  const intake = studentInfo.intake;
+  const dept = studentInfo.dept;
+
+  const classListCursor = classRoomCollection.find({
+    $and: [{ intake, dept }],
+  });
+
+  const classList = await classListCursor.toArray();
+  res.send({ okay: true, data: classList });
 });
 
 module.exports = router;
