@@ -5,27 +5,35 @@ const router = express.Router();
 router.post('/add', async (req, res) => {
   try {
     const { mid, final, thirty, id, courseCode } = req.body;
-    const otherInfo = othersCollection.findOne({});
+    const otherInfo = await othersCollection.findOne({});
     const currentSemester = otherInfo.currentSemester;
-    const studentInfo = studentsCollection.findOne({ id });
+    const studentInfo = await studentsCollection.findOne({ id });
 
-    let newGrades = [];
+    let newGrades = {};
     if (mid) newGrades.mid = mid;
     if (final) newGrades.final = final;
     if (thirty) newGrades.thirty = thirty;
 
     const courses = studentInfo.courses;
-    const currentCourses = courses[currentSemester];
-    let course = currentCourses.filter((data) => data.code === courseCode);
+    let currentCourses = courses[currentSemester];
 
-    course = { ...course, newGrades };
-    courses[currentSemester] = course;
+    let [targetCourse] = currentCourses.filter(
+      (data) => data.code === courseCode
+    );
+
+    targetCourse = { ...targetCourse, ...newGrades };
+    currentCourses = currentCourses.filter((data) => data.code !== courseCode);
+    currentCourses = [...currentCourses, { ...targetCourse }];
+    courses[currentSemester] = currentCourses;
 
     const updatedStatus = await studentsCollection.updateOne(
       { id },
       { $set: { courses } },
       { upsert: true }
     );
+
+    if (!updatedStatus.acknowledged)
+      return res.send({ okay: false, msg: 'Could not update result' });
 
     res.send({ okay: true, msg: 'Result Updated' });
   } catch (err) {
