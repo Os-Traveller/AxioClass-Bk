@@ -15,7 +15,6 @@ router.post('/add', async (req, res) => {
   const classData = req.body;
   const { dept, intake, courseCode } = classData;
 
-  // finding students of that intake and dept
   const studentsCursor = studentsCollection.find({
     $and: [{ dept, intake }],
   });
@@ -133,8 +132,6 @@ router.get('/search', async (req, res) => {
   const cursor = classRoomCollection.find(query);
   const classList = await cursor.toArray();
 
-  if (!classList || classList.length === 0)
-    return res.send({ okay: false, msg: 'No class found' });
   res.send({ okay: true, data: classList });
 });
 
@@ -184,6 +181,13 @@ router.get('/student/:id', async (req, res) => {
     $and: [{ intake, dept }],
   });
 
+  const classList = await classListCursor.toArray();
+  res.send({ okay: true, data: classList });
+});
+
+router.get('/teacher/:name', async (req, res) => {
+  const name = req.params.name;
+  const classListCursor = classRoomCollection.find({ instructor: name });
   const classList = await classListCursor.toArray();
   res.send({ okay: true, data: classList });
 });
