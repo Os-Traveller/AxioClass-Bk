@@ -172,4 +172,20 @@ router.get('/:classCode', async (req, res) => {
   }
 });
 
+router.get('/student/:id', async (req, res) => {
+  const id = req.params.id;
+  const studentInfo = await studentsCollection.findOne({ id });
+  if (!studentInfo) return res.send({ okay: false, msg: 'No student Found' });
+
+  const intake = studentInfo.intake;
+  const dept = studentInfo.dept;
+
+  const classListCursor = classRoomCollection.find({
+    $and: [{ intake, dept }],
+  });
+
+  const classList = await classListCursor.toArray();
+  res.send({ okay: true, data: classList });
+});
+
 module.exports = router;
